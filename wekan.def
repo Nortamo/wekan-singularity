@@ -1,0 +1,36 @@
+BootStrap: library
+From: centos:7.6
+
+
+
+%post
+    export NOV=v12.18.4 
+    yum -y install wget tar gzip unzip bzip2 fontconfig
+    yum install epel-release -y
+    yum -y group install "Development Tools"
+    wget https://nodejs.org/dist/${NOV}/node-${NOV}-linux-x64.tar.gz 
+    wget https://repo.mongodb.org/yum/redhat/7/mongodb-org/4.2/x86_64/RPMS/mongodb-org-server-4.2.8-1.el7.x86_64.rpm
+    mkdir -p /opt/mongo
+    tar -xvf node-${NOV}-linux-x64.tar.gz
+    mv mongodb-org-server-4.2.8-1.el7.x86_64.rpm /opt/mongo
+    mv node-${NOV}-linux-x64 /opt/node
+    cd /opt/mongo && rpm2cpio mongodb-org-server-4.2.8-1.el7.x86_64.rpm | cpio -idmv
+    rm  mongodb-org-server-4.2.8-1.el7.x86_64.rpm
+    mv /opt/node/bin/* /usr/bin 
+    mv /opt/node/lib/* /usr/lib
+    cd /opt
+    wget https://releases.wekan.team/wekan-4.40.zip
+    unzip wekan-4.40.zip
+    rm wekan-4.40.zip
+    mv bundle wekan
+    cd /opt/wekan
+    cd programs/server
+    npm install --unsafe-perm --loglevel verbose bcrypt@5.0.0
+    npm install --unsafe-perm --loglevel verbose fibers
+
+%runscript
+    source /etc/default/wekan
+    /opt/mongo/usr/bin/mongod --port=27017 &
+    cd /opt/wekan 
+    node main.js
+
